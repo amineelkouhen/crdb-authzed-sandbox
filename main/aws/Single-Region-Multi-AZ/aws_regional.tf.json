@@ -1,0 +1,74 @@
+{
+    "provider": {
+        "aws": {
+            "region": "${var.regions[0]}",
+            "access_key": "${var.aws_access_key}",
+            "secret_key": "${var.aws_secret_key}",
+            "token": "${var.aws_session_token}",
+            "alias": "provider"
+        }
+    },
+    "module": {
+        "network-vpc": {
+            "source": "../../../modules/aws/network",
+            "name": "${var.deployment_name}-${var.env}",
+            "vpc_cidr": "${var.crdb_vpc_cidr[0]}",
+            "resource_tags": {},
+            "subnets_cidrs": "${var.crdb_subnets[0]}",
+            "providers": {
+                "aws": "aws.provider"
+            }
+        },
+        "keypair": {
+            "source": "../../../modules/aws/keypair",
+            "name": "${var.deployment_name}-${var.env}",
+            "ssh_public_key": "${var.ssh_public_key}",
+            "resource_tags": {},
+            "providers": {
+                "aws": "aws.provider"
+            }
+        },
+        "crdb-cluster": {
+            "source": "../../../modules/aws/cr",
+            "name": "${var.deployment_name}-${var.env}",
+            "worker_count": "${var.crdb_cluster_size[0]}",
+            "machine_type": "${var.crdb_machine_type}",
+            "machine_image": "${var.crdb_machine_images[0]}",
+            "resource_tags": {},
+            "ssh_user": "${var.ssh_user}",
+            "ssh_public_key": "${var.ssh_public_key}",
+            "ssh_key_name": "${module.keypair.key-name}",
+            "security_groups": "${module.network-vpc.security-groups}",
+            "region": "${var.regions[0]}",
+            "availability_zones": "${keys(var.crdb_subnets[0])}",
+            "subnets": "${module.network-vpc.subnets}",
+            "cockroach_release": "${var.crdb_release}",
+            "cluster_join_ips": "${concat(module.crdb-cluster.cr-private-ips)}",
+            "boot_disk_size": "${var.crdb_volume_size}",
+            "boot_disk_type": "${var.crdb_volume_type}",
+            "sql_load_balancer_arn": "${module.network-vpc.sql_load_balancer_target_group}",
+            "console_load_balancer_arn": "${module.network-vpc.console_load_balancer_target_group}",
+            "init": true,
+            "providers": {
+                "aws": "aws.provider"
+            }
+        }
+    },
+    "output": {
+        "crdb-cluster-public-ips": {
+            "value": "${module.crdb-cluster.cr-public-ips}"
+        },
+        "crdb-cluster-private-ips": {
+            "value": "${module.crdb-cluster.cr-private-ips}"
+        },
+        "crdb-cluster-nlb-dns": {
+            "value": "${module.network-vpc.nlb_dns_name}"
+        },
+        "console-url": {
+            "value": "http://${module.network-vpc.nlb_dns_name}:8080/"
+        },
+        "connection-string": {
+            "value": "postgresql://root@${module.network-vpc.nlb_dns_name}:26257/defaultdb"
+        }
+    }
+}

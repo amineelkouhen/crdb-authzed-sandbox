@@ -1,0 +1,60 @@
+{
+    "provider": {
+        "aws": {
+            "region": "${var.client_region}",
+            "access_key": "${var.aws_access_key}",
+            "secret_key": "${var.aws_secret_key}",
+            "token": "${var.aws_session_token}",
+            "alias": "client_provider"
+        }
+    },
+    "module": {
+        "client-network": {
+            "source": "../../../modules/aws/client-network",
+            "name": "${var.deployment_name}-client",
+            "client_vpc_cidr": "${var.client_vpc_cidr}",
+            "resource_tags" : {},
+            "client_subnet_cidr": "${var.client_subnet}",
+            "providers": {
+                "aws": "aws.client_provider"
+            }
+        },
+        "client-keypair": {
+            "source": "../../../modules/aws/keypair",
+            "name": "${var.deployment_name}-client",
+            "ssh_public_key": "${var.ssh_public_key}",
+            "resource_tags" : {},
+            "providers": {
+                "aws": "aws.client_provider"
+            }
+        },
+        "client": {
+            "source": "../../../modules/aws/bastion",
+            "name": "${var.deployment_name}",
+            "subnet": "${module.client-network.client_subnets.id}",
+            "availability_zone": "${keys(var.client_subnet)[0]}",
+            "security_groups": "${module.client-network.client-security-groups}",
+            "machine_image": "${var.client_machine_image}",
+            "machine_type": "${var.client_machine_type}",
+            "cluster_fqdn": "${module.network-vpc.nlb_dns_name}",
+            "cluster_organization" : "${var.organization_name}",
+            "cluster_license" : "${var.cluster_license}",
+            "cockroach_release" : "${var.crdb_release}",
+            "preshared_key" : "${var.preshared_key}",
+            "resource_tags" : {},
+            "ssh_user": "${var.ssh_user}",
+            "ssh_public_key": "${var.ssh_public_key}",
+            "ssh_private_key": "${var.ssh_private_key}",
+            "ssh_key_name": "${module.client-keypair.key-name}",
+            "dependencies":"${[]}",
+            "providers": {
+                "aws": "aws.client_provider"
+            }
+        }
+    },
+    "output": {
+        "client-public-IP": {
+            "value": "${module.client.public-ip}"
+        }
+    }
+}
