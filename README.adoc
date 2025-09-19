@@ -46,7 +46,7 @@ Authorization answers the question, “What can a user do once they’ve success
 
 At its core, SpiceDB is behind the Authorization model provided by all of AuthZed's products. This open-source project was inspired by Google's own internal authorization service: Zanzibar. It is designed to be entirely agnostic to authentication solutions/identity providers. SpiceDB implements a relationship-based permissions model that supports strong consistency, global replication, and extremely high scale, processing millions of authorization requests per second for modern, distributed apps.
 
-image::images/spicedb.png[]
+image::images/spicedb.png[width=300]
 Like a relational database, developers define a schema, write data to the database, and query that data in various ways. However, unlike relational databases that use general-purpose SQL, SpiceDB exposes a gRPC API specifically optimized for authorizing actions in your systems.
 
 == 🤝 AuthZed/CockroachDB Joint Architecture
